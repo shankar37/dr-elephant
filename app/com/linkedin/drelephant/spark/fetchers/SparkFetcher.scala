@@ -63,9 +63,6 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     if (eventLogEnabled) Some(new SparkLogClient(hadoopConfiguration, sparkConf)) else None
   }
 
-  private[fetchers] lazy val backupFetcher: ElephantFetcher[SparkApplicationData] =
-    new FSFetcher(fetcherConfigurationData)
-
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     doFetchData(analyticJob) match {
       case Success(data) => data
@@ -78,11 +75,6 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     logger.info(s"Fetching data for ${appId}")
     Try {
       Await.result(doFetchDataUsingRestAndLogClients(analyticJob), DEFAULT_TIMEOUT)
-    }.recover {
-      case e => {
-        logger.warn("Exception fetching data. Will make another attempt with backup fetcher instead.", e)
-        Await.result(doFetchDataUsingBackupFetcher(analyticJob), DEFAULT_TIMEOUT)
-      }
     }.transform(
       data => {
         logger.info(s"Succeeded fetching data for ${appId}")
@@ -109,9 +101,6 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
     SparkApplicationData(appId, restDerivedData, logDerivedData)
   }
 
-  private def doFetchDataUsingBackupFetcher(analyticJob: AnalyticJob): Future[SparkApplicationData] = async {
-    backupFetcher.fetchData(analyticJob)
-  }
 }
 
 object SparkFetcher {

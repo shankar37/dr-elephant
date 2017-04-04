@@ -81,38 +81,6 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
       data.appId should be(appId)
     }
 
-    it("returns data from the legacy fetchers if the REST client fails") {
-      val sharedSparkConf = new SparkConf()
-      sharedSparkConf.set("spark.eventLog.dir", "/logs/spark")
-
-      val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
-        override lazy val sparkConf = sharedSparkConf
-        override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future { throw new Exception() })
-        override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future { throw new Exception() }))
-        override lazy val backupFetcher = new FSFetcher(fetcherConfigurationData) {
-          override lazy val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData) {
-            override lazy val sparkConf = sharedSparkConf
-            override def fetchData(analyticJob: AnalyticJob) = new MockSparkApplicationData() {
-              val generalData = {
-                val generalData = new SparkGeneralData()
-                generalData.setApplicationId("application_1")
-                generalData.setApplicationName("app")
-                generalData.setStartTime(1000L)
-                generalData.setEndTime(2000L)
-                generalData.setSparkUser("foo")
-                generalData
-              }
-
-              override def getGeneralData(): SparkGeneralData = generalData
-            }
-          }
-        }
-      }
-
-      val data = sparkFetcher.fetchData(analyticJob)
-      data.appId should be("application_1")
-    }
-
     it("throws an exception if the REST client fails") {
       val sparkFetcher = new SparkFetcher(fetcherConfigurationData) {
         override lazy val sparkConf = new SparkConf()
