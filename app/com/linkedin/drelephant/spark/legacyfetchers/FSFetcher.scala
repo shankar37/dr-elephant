@@ -16,18 +16,21 @@
 
 package com.linkedin.drelephant.spark.legacyfetchers
 
-import com.linkedin.drelephant.analysis.AnalyticJob
+import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
-import com.linkedin.drelephant.spark.legacydata.SparkApplicationData
+import com.linkedin.drelephant.spark.data.SparkApplicationData
+import com.linkedin.drelephant.spark.legacydata.LegacyDataConverters
 import org.apache.spark.deploy.history.SparkFSFetcher
 
+class FSFetcher(fetcherConfigurationData: FetcherConfigurationData)
+  extends ElephantFetcher[SparkApplicationData] {
+  lazy val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData)
 
-object LegacyFetchers {
-  def fetchDataUsingLegacyFetcher(
-    fetcherConfigurationData: FetcherConfigurationData,
-    analyticJob: AnalyticJob
-  ): SparkApplicationData = {
-    val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData)
-    legacyFetcher.fetchData(analyticJob)
+  override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
+    val legacyData = legacyFetcher.fetchData(analyticJob)
+    LegacyDataConverters.convert(legacyData)
   }
+}
+
+object FSFetcher {
 }

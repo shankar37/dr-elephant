@@ -28,6 +28,7 @@ import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
 import com.linkedin.drelephant.spark.legacydata.{MockSparkApplicationData, SparkGeneralData}
+import com.linkedin.drelephant.spark.legacyfetchers.FSFetcher
 import com.linkedin.drelephant.util.{SparkUtils, HadoopUtils}
 import org.apache.hadoop.fs.Path
 import org.apache.log4j.Logger
@@ -88,7 +89,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
         override lazy val sparkConf = sharedSparkConf
         override lazy val sparkRestClient = newFakeSparkRestClient(appId, Future { throw new Exception() })
         override lazy val sparkLogClient = Some(newFakeSparkLogClient(appId, Some("2"), Future { throw new Exception() }))
-        override lazy val backupFetcher = new SparkFetcher.LegacyFetcher(fetcherConfigurationData) {
+        override lazy val backupFetcher = new FSFetcher(fetcherConfigurationData) {
           override lazy val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData) {
             override lazy val sparkConf = sharedSparkConf
             override def fetchData(analyticJob: AnalyticJob) = new MockSparkApplicationData() {

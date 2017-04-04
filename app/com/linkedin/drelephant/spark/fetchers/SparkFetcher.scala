@@ -25,6 +25,7 @@ import scala.util.control.NonFatal
 import com.linkedin.drelephant.analysis.{AnalyticJob, ElephantFetcher}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
+import com.linkedin.drelephant.spark.legacyfetchers.FSFetcher
 import com.linkedin.drelephant.util.SparkUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.log4j.Logger
@@ -63,7 +64,7 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   }
 
   private[fetchers] lazy val backupFetcher: ElephantFetcher[SparkApplicationData] =
-    new LegacyFetcher(fetcherConfigurationData)
+    new FSFetcher(fetcherConfigurationData)
 
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
     doFetchData(analyticJob) match {
@@ -114,18 +115,6 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
 }
 
 object SparkFetcher {
-  import org.apache.spark.deploy.history.SparkFSFetcher
-  import com.linkedin.drelephant.spark.legacydata.LegacyDataConverters
-
-  private[fetchers] class LegacyFetcher(fetcherConfigurationData: FetcherConfigurationData)
-      extends ElephantFetcher[SparkApplicationData] {
-    lazy val legacyFetcher = new SparkFSFetcher(fetcherConfigurationData)
-
-    override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
-      val legacyData = legacyFetcher.fetchData(analyticJob)
-      LegacyDataConverters.convert(legacyData)
-    }
-  }
 
   val SPARK_EVENT_LOG_ENABLED_KEY = "spark.eventLog.enabled"
   val DEFAULT_TIMEOUT = Duration(60, SECONDS)
