@@ -29,7 +29,6 @@
   </fetcher>
 -->
 <fetchers>
-  <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
     <classname>com.linkedin.drelephant.mapreduce.fetchers.MapReduceFetcherHadoop2</classname>
@@ -37,19 +36,19 @@
       <sampling_enabled>false</sampling_enabled>
     </params>
   </fetcher>
+  <!--
+     This is an experimental replacement for the MapReduceFetcherHadoop2 that attempts to burn
+     through queues of jobs faster by pulling data directly from HDFS rather than going through
+     the job history server.
 
-    This is an experimental replacement for the MapReduceFetcherHadoop2 that attempts to burn
-    through queues of jobs faster by pulling data directly from HDFS rather than going through
-    the job history server.
+     Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
+     files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
+     is 1024MB. To increase this, e.g. to 2048MB, run this before start.sh:
+       export OPTS="-mem 2048"
 
-    Increasing the param history_log_size_limit_in_mb allows this fetcher to accept larger log
-    files, but also increase the risk of OutOfMemory error. The default heap size of Dr. Elephant
-    is 1024MB. To increase this, e.g. to 2048MB, run this before start.sh:
-      export OPTS="-mem 2048"
-
-    To work properly, this fetcher should use the same timezone with the job history server.
-    If not set, the local timezone will be used.
-  -->
+     To work properly, this fetcher should use the same timezone with the job history server.
+     If not set, the local timezone will be used.
+   -->
   <!--
   <fetcher>
     <applicationtype>mapreduce</applicationtype>
@@ -64,6 +63,6 @@
 
   <fetcher>
     <applicationtype>spark</applicationtype>
-    <classname>com.linkedin.drelephant.spark.legacyfetchers.FSFetcher</classname>
+    <classname>com.linkedin.drelephant.spark.fetchers.SparkFetcher</classname>
   </fetcher>
 </fetchers>
