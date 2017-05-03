@@ -16,16 +16,18 @@
 
 package com.linkedin.drelephant.spark
 
+import java.text.SimpleDateFormat
 import java.util.Date
 
-import scala.collection.JavaConverters
+import scala.collection.{Map, JavaConverters}
 
 import com.linkedin.drelephant.analysis.ApplicationType
 import com.linkedin.drelephant.configurations.aggregator.AggregatorConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo, ExecutorSummary}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1._
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 import org.scalatest.{FunSpec, Matchers}
+import org.apache.spark.status.api.v1.StageStatus
 
 class SparkMetricsAggregatorTest extends FunSpec with Matchers {
   import SparkMetricsAggregatorTest._
@@ -51,10 +53,16 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
         newFakeExecutorSummary(id = "1", totalDuration = 1000000L),
         newFakeExecutorSummary(id = "2", totalDuration = 3000000L)
       )
+      val taskDatas = Seq(
+        newFakeTaskData(1, 500000L, 1000000L, 500000L)
+      )
+      val stageDatas = Seq(
+        newFakeStageData(id = 1 , taskDatas = taskDatas)
+      )
       SparkRestDerivedData(
         applicationInfo,
         jobDatas = Seq.empty,
-        stageDatas = Seq.empty,
+        stageDatas = stageDatas,
         executorSummaries = executorSummaries
       )
     }
@@ -82,21 +90,18 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
       val result = aggregator.getResult
 
       it("calculates resources used") {
-        val totalExecutorMemoryMb = 2 * 4096
-        val applicationDurationSeconds = 8000
+        val totalExecutorTimeSeconds = 1000 + 3000
         val executorMemoryMb = 4096
-        val totalExecutorTaskTimeSeconds = 1000 + 3000
-        result.getResourceUsed should be(totalExecutorMemoryMb * applicationDurationSeconds)
+        result.getResourceUsed should be(executorMemoryMb * totalExecutorTimeSeconds)
       }
 
       it("calculates resources wasted") {
-        val totalExecutorMemoryMb = 2 * 4096
-        val applicationDurationSeconds = 8000
-        val resourceAllocated = totalExecutorMemoryMb * applicationDurationSeconds;
-
         val executorMemoryMb = 4096
-        val totalExecutorTaskTimeSeconds = 1000 + 3000
-        val resourceUsed = executorMemoryMb * totalExecutorTaskTimeSeconds;
+        val totalTaskTimeSeconds = 2000
+        val totalExecutorTimeSeconds = 1000 + 3000
+        val resourceAllocated = executorMemoryMb * totalExecutorTimeSeconds;
+
+        val resourceUsed = executorMemoryMb * totalTaskTimeSeconds;
 
 
         result.getResourceWasted should be(resourceAllocated - resourceUsed * 1.5)
@@ -170,5 +175,60 @@ object SparkMetricsAggregatorTest {
     totalShuffleWrite = 0,
     maxMemory = 0,
     executorLogs = Map.empty
+  )
+
+  def newFakeTaskData(id: Long,
+                      executorDeserializeTime: Long,
+                      executorRunTime: Long,
+                      resultSerializationTime: Long) : TaskData = new TaskData(
+    taskId = id,
+    index = 0,
+    attempt = 0,
+    launchTime = new SimpleDateFormat("yyyy-MM-dd").parse("2014-02-11"),
+    executorId = "",
+    host = "",
+    taskLocality = "",
+    speculative = false,
+    accumulatorUpdates = Seq.empty,
+    errorMessage = None,
+    new Some(new TaskMetrics(
+      executorDeserializeTime = executorDeserializeTime,
+      executorRunTime = executorRunTime,
+      resultSize = 0L,
+      jvmGcTime = 0L,
+      resultSerializationTime = resultSerializationTime,
+      memoryBytesSpilled = 0L,
+      diskBytesSpilled = 0L,
+      inputMetrics = None,
+      outputMetrics = None,
+      shuffleReadMetrics = None,
+      shuffleWriteMetrics = None
+    ))
+  )
+
+  def newFakeStageData(id: Int, taskDatas: Seq[TaskData]) = new StageData(
+    status = StageStatus.COMPLETE,
+    stageId = id,
+    attemptId = 0,
+    numActiveTasks = 0,
+    numCompleteTasks = 0,
+    numFailedTasks = 0,
+    executorRunTime = 0L,
+    inputBytes = 0L,
+    inputRecords = 0L,
+    outputBytes = 0L,
+    outputRecords = 0L,
+    shuffleReadBytes = 0L,
+    shuffleReadRecords = 0L,
+    shuffleWriteBytes = 0L,
+    shuffleWriteRecords = 0L,
+    memoryBytesSpilled = 0L,
+    diskBytesSpilled = 0L,
+    name = "",
+    details = "",
+    schedulingPool = "",
+    accumulatorUpdates = Seq.empty,
+    tasks = Some(taskDatas.map(taskData => taskData.taskId -> taskData).toMap),
+    executorSummary = None
   )
 }
