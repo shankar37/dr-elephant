@@ -74,27 +74,11 @@ class SparkFetcher(fetcherConfigurationData: FetcherConfigurationData)
   }
 
   override def fetchData(analyticJob: AnalyticJob): SparkApplicationData = {
-    doFetchData(analyticJob) match {
-      case Success(data) => data
-      case Failure(e) => throw e
-    }
-  }
-
-  private def doFetchData(analyticJob: AnalyticJob): Try[SparkApplicationData] = {
     val appId = analyticJob.getAppId
     logger.info(s"Fetching data for ${appId}")
     Try {
       Await.result(doFetchDataUsingRestAndLogClients(analyticJob), DEFAULT_TIMEOUT)
-    }.transform(
-      data => {
-        logger.info(s"Succeeded fetching data for ${appId}")
-        Success(data)
-      },
-      e => {
-        logger.error(s"Failed fetching data for ${appId}", e)
-        Failure(e)
-      }
-    )
+    }.get
   }
 
   private def doFetchDataUsingRestAndLogClients(analyticJob: AnalyticJob): Future[SparkApplicationData] = async {

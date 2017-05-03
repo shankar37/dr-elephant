@@ -16,6 +16,9 @@
 
 package com.linkedin.drelephant.spark.legacydata;
 
+import com.google.common.primitives.Ints;
+import com.google.common.collect.Ordering;
+import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,8 +26,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
 
 
 /**
@@ -120,23 +125,25 @@ public class SparkJobProgressData {
    * @param jobId
    * @return
    */
+  @Nullable
   public String getJobDescription(int jobId) {
     List<Integer> stageIds = _jobIdToInfo.get(jobId).stageIds;
-    int id = -1;
-    for (int stageId : stageIds) {
-      id = Math.max(id, stageId);
-    }
-    if (id == -1) {
+    if (stageIds.size() == 0) {
       logger.error("Spark Job id [" + jobId + "] does not contain any stage.");
       return null;
     }
+    int id = Ordering.<Integer> natural().max(stageIds);
+
     return _stageIdToInfo.get(new StageAttemptId(id, 0)).name;
   }
 
   public List<String> getFailedJobDescriptions() {
     List<String> result = new ArrayList<String>();
     for (int id : _failedJobs) {
-      result.add(getJobDescription(id));
+      String desc = getJobDescription(id);
+      if( desc != null) {
+        result.add(desc);
+      }
     }
     return result;
   }
@@ -170,7 +177,7 @@ public class SparkJobProgressData {
 
     @Override
     public int hashCode() {
-      return new Integer(stageId).hashCode() * 31 + new Integer(attemptId).hashCode();
+      return Ints.hashCode(stageId) * 31 + Ints.hashCode(attemptId);
     }
 
     @Override
@@ -267,7 +274,7 @@ public class SparkJobProgressData {
     }
   }
 
-  private static String getListString(Collection collection) {
+  private static String getListString(Collection<Integer> collection) {
     return "[" + StringUtils.join(collection, ",") + "]";
   }
 }

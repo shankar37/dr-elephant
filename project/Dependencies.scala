@@ -30,6 +30,7 @@ object Dependencies {
   lazy val jsoupVersion = "1.7.3"
   lazy val mysqlConnectorVersion = "5.1.36"
   lazy val oozieClientVersion = "4.2.0"
+  lazy val jsr305Version = "3.0.1"
 
   lazy val HADOOP_VERSION = "hadoopversion"
   lazy val SPARK_VERSION = "sparkversion"
@@ -62,6 +63,7 @@ object Dependencies {
   // Dependency coordinates
   var requiredDep = Seq(
     "com.google.code.gson" % "gson" % gsonVersion,
+    "com.google.code.findbugs" % "jsr305" % jsr305Version,
     "com.google.guava" % "guava" % guavaVersion,
     "com.jsuereth" %% "scala-arm" % "1.4",
     "commons-codec" % "commons-codec" % commonsCodecVersion,
