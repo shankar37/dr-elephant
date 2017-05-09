@@ -303,18 +303,14 @@ public class MapReduceFetcherHadoop2 extends MapReduceFetcher {
 
       for (JsonNode task : tasks) {
         String state = task.get("state").getValueAsText();
-        if (!state.equals("SUCCEEDED")) {
-          // This is a failed task.
-          continue;
-        }
         String taskId = task.get("id").getValueAsText();
         String attemptId = task.get("successfulAttempt").getValueAsText();
         boolean isMapper = task.get("type").getValueAsText().equals("MAP");
 
         if (isMapper) {
-          mapperList.add(new MapReduceTaskData(taskId, attemptId));
+          mapperList.add(new MapReduceTaskData(taskId, attemptId, state));
         } else {
-          reducerList.add(new MapReduceTaskData(taskId, attemptId));
+          reducerList.add(new MapReduceTaskData(taskId, attemptId, state));
         }
       }
 

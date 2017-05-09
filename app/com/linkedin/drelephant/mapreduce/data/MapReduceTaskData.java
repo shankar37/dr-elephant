@@ -23,6 +23,7 @@ package com.linkedin.drelephant.mapreduce.data;
 public class MapReduceTaskData {
 
   private MapReduceCounterData _counterHolder;
+  private String _state;
   private String _taskId;
   // The successful attempt id
   private String _attemptId;
@@ -34,9 +35,10 @@ public class MapReduceTaskData {
   // This flag will only be true when successfully setting time and counter values.
   private boolean _isTimeAndCounterDataPresent = false;
 
-  public MapReduceTaskData(String taskId, String taskAttemptId) {
+  public MapReduceTaskData(String taskId, String taskAttemptId, String state) {
     this._taskId = taskId;
     this._attemptId = taskAttemptId;
+    this._state = state;
   }
 
   public void setTimeAndCounter(long[] time, MapReduceCounterData counterHolder) {
