@@ -51,30 +51,20 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     executorInstances <- executorInstancesOf(data)
     executorMemoryBytes <- executorMemoryBytesOf(data)
   } {
-<<<<<<< HEAD
-    val totalExecutorTimeMillis = totalExecutorTimeMillisOf(data)
-    val totalTaskTimeMillis = totalTaskTimeMillisOf(data)
-
-    val resourcesAllocatedForUse = aggregateResourceUsage(executorMemoryBytes, totalExecutorTimeMillis)
-    val resourcesActuallyUsed = aggregateResourceUsage(executorMemoryBytes, totalTaskTimeMillis)
-
-    val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
-    val resourcesWastedMBSeconds =  (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
-      case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
-      case false => 0.0
-=======
     val applicationDurationMillis = applicationDurationMillisOf(data)
     if( applicationDurationMillis < 0) {
       logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
     }  else {
-      val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
+      val totalExecutorTimeMillis = totalExecutorTimeMillisOf(data)
+      val totalTaskTimeMillis = totalTaskTimeMillisOf(data)
 
-      val resourcesAllocatedForUse =
-        aggregateresourcesAllocatedForUse(executorInstances, executorMemoryBytes, applicationDurationMillis)
-      val resourcesActuallyUsed = aggregateresourcesActuallyUsed(executorMemoryBytes, totalExecutorTaskTimeMillis)
+      logger.info(s"${data.getAppId}=> totalExecutorTime: ${totalExecutorTimeMillis}, totalTaskTime: ${totalTaskTimeMillis} executorMemoryBytes: ${executorMemoryBytes}")
+
+      val resourcesAllocatedForUse = aggregateResourceUsage(executorMemoryBytes, totalExecutorTimeMillis)
+      val resourcesActuallyUsed = aggregateResourceUsage(executorMemoryBytes, totalTaskTimeMillis)
 
       val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
-      val resourcesWastedMBSeconds = (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
+      val resourcesWastedMBSeconds =  (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
         case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
         case false => 0.0
       }
@@ -93,7 +83,6 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
         logger.warn(s"allocatedMemoryWasteBufferPercentage:${allocatedMemoryWasteBufferPercentage}")
       }
       hadoopAggregatedData.setResourceWasted(resourcesWastedMBSeconds.toLong)
->>>>>>> linkedin/master
     }
   }
 
@@ -138,9 +127,13 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
         case None => 0
         case _ => stageData.tasks.get.values.map( taskData => taskData.taskMetrics match {
           case None => 0
-          case _ => taskData.taskMetrics.get.executorRunTime +
-                    taskData.taskMetrics.get.executorDeserializeTime +
-                    taskData.taskMetrics.get.resultSerializationTime
+          case _ => {
+            logger.info(s"${taskData.taskMetrics.get.executorRunTime} ${taskData.taskMetrics.get.executorDeserializeTime}" +
+              s"${taskData.taskMetrics.get.resultSerializationTime}")
+            taskData.taskMetrics.get.executorRunTime +
+              taskData.taskMetrics.get.executorDeserializeTime +
+              taskData.taskMetrics.get.resultSerializationTime
+            }
           }).sum
         }
       }

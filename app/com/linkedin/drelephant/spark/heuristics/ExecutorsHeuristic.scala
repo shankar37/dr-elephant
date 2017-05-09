@@ -220,15 +220,19 @@ object ExecutorsHeuristic {
 
   object Distribution {
     def apply(values: Seq[Long]): Distribution = {
-      val sortedValues = values.sorted
-      val sortedValuesAsJava = sortedValues.map(Long.box).to[ArrayBuffer].asJava
-      Distribution(
-        sortedValues.min,
-        p25 = Statistics.percentile(sortedValuesAsJava, 25),
-        Statistics.median(sortedValuesAsJava),
-        p75 = Statistics.percentile(sortedValuesAsJava, 75),
-        sortedValues.max
-      )
+      if(values.size > 0) {
+        val sortedValues = values.sorted
+        val sortedValuesAsJava = sortedValues.map(Long.box).to[ArrayBuffer].asJava
+        Distribution(
+          sortedValues.min,
+          p25 = Statistics.percentile(sortedValuesAsJava, 25),
+          Statistics.median(sortedValuesAsJava),
+          p75 = Statistics.percentile(sortedValuesAsJava, 75),
+          sortedValues.max
+        )
+      } else {
+        Distribution(0,0,0,0,0)
+      }
     }
   }
 }
