@@ -51,6 +51,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     executorInstances <- executorInstancesOf(data)
     executorMemoryBytes <- executorMemoryBytesOf(data)
   } {
+<<<<<<< HEAD
     val totalExecutorTimeMillis = totalExecutorTimeMillisOf(data)
     val totalTaskTimeMillis = totalTaskTimeMillisOf(data)
 
@@ -61,15 +62,39 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     val resourcesWastedMBSeconds =  (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
       case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
       case false => 0.0
-    }
-    //allocated is the total used resource from the cluster.
-    if (resourcesAllocatedForUse.isValidLong) {
-      hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
-    } else {
-      logger.info(s"resourcesAllocatedForUse exceeds Long.MaxValue: ${resourcesAllocatedForUse  }")
-    }
+=======
+    val applicationDurationMillis = applicationDurationMillisOf(data)
+    if( applicationDurationMillis < 0) {
+      logger.warn(s"applicationDurationMillis is negative. Skipping Metrics Aggregation:${applicationDurationMillis}")
+    }  else {
+      val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
-    hadoopAggregatedData.setResourceWasted(resourcesWastedMBSeconds.toLong)
+      val resourcesAllocatedForUse =
+        aggregateresourcesAllocatedForUse(executorInstances, executorMemoryBytes, applicationDurationMillis)
+      val resourcesActuallyUsed = aggregateresourcesActuallyUsed(executorMemoryBytes, totalExecutorTaskTimeMillis)
+
+      val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
+      val resourcesWastedMBSeconds = (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
+        case true => resourcesAllocatedForUse.doubleValue() - resourcesActuallyUsedWithBuffer
+        case false => 0.0
+      }
+      //allocated is the total used resource from the cluster.
+      if (resourcesAllocatedForUse.isValidLong) {
+        hadoopAggregatedData.setResourceUsed(resourcesAllocatedForUse.toLong)
+      } else {
+        logger.warn(s"resourcesAllocatedForUse/resourcesWasted exceeds Long.MaxValue")
+        logger.warn(s"ResourceUsed: ${resourcesAllocatedForUse}")
+        logger.warn(s"executorInstances: ${executorInstances}")
+        logger.warn(s"executorMemoryBytes:${executorMemoryBytes}")
+        logger.warn(s"applicationDurationMillis:${applicationDurationMillis}")
+        logger.warn(s"totalExecutorTaskTimeMillis:${totalExecutorTaskTimeMillis}")
+        logger.warn(s"resourcesActuallyUsedWithBuffer:${resourcesActuallyUsedWithBuffer}")
+        logger.warn(s"resourcesWastedMBSeconds:${resourcesWastedMBSeconds}")
+        logger.warn(s"allocatedMemoryWasteBufferPercentage:${allocatedMemoryWasteBufferPercentage}")
+      }
+      hadoopAggregatedData.setResourceWasted(resourcesWastedMBSeconds.toLong)
+>>>>>>> linkedin/master
+    }
   }
 
   private def aggregateResourceUsage(executorMemoryBytes: Long, totalExecutorTaskTimeMillis: BigInt): BigInt = {
