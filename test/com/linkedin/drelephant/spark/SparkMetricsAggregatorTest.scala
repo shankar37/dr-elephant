@@ -53,19 +53,12 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
       newFakeExecutorSummary(id = "2", totalDuration = 3000000L)
     )
     val restDerivedData = {
-<<<<<<< HEAD
-      val executorSummaries = Seq(
-        newFakeExecutorSummary(id = "1", totalDuration = 1000000L),
-        newFakeExecutorSummary(id = "2", totalDuration = 3000000L)
-      )
       val taskDatas = Seq(
         newFakeTaskData(1, 500000L, 1000000L, 500000L)
       )
       val stageDatas = Seq(
         newFakeStageData(id = 1 , taskDatas = taskDatas)
       )
-=======
->>>>>>> linkedin/master
       SparkRestDerivedData(
         applicationInfo,
         jobDatas = Seq.empty,
