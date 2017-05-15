@@ -45,7 +45,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
         val duration = 8000000L
         newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(now - duration), endTime = new Date(now))
       }
-      new ApplicationInfo(appId, name = "app", Seq(applicationAttemptInfo))
+      new ApplicationInfoImpl(appId, name = "app", Seq(applicationAttemptInfo))
     }
 
     val executorSummaries = Seq(
@@ -118,7 +118,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
             val duration = -8000000L
             newFakeApplicationAttemptInfo(Some("1"), startTime = new Date(now - duration), endTime = new Date(now))
           }
-          new ApplicationInfo(appId, name = "app", Seq(applicationAttemptInfo))
+          new ApplicationInfoImpl(appId, name = "app", Seq(applicationAttemptInfo))
         }
         val restDerivedData = SparkRestDerivedData(
             applicationInfo,
@@ -173,7 +173,7 @@ object SparkMetricsAggregatorTest {
     attemptId: Option[String],
     startTime: Date,
     endTime: Date
-  ): ApplicationAttemptInfo = new ApplicationAttemptInfo(
+  ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
     attemptId,
     startTime,
     endTime,
@@ -184,7 +184,7 @@ object SparkMetricsAggregatorTest {
   def newFakeExecutorSummary(
     id: String,
     totalDuration: Long
-  ): ExecutorSummary = new ExecutorSummary(
+  ): ExecutorSummaryImpl = new ExecutorSummaryImpl(
     id,
     hostPort = "",
     rddBlocks = 0,
@@ -205,7 +205,7 @@ object SparkMetricsAggregatorTest {
   def newFakeTaskData(id: Long,
                       executorDeserializeTime: Long,
                       executorRunTime: Long,
-                      resultSerializationTime: Long) : TaskData = new TaskData(
+                      resultSerializationTime: Long) : TaskDataImpl = new TaskDataImpl(
     taskId = id,
     index = 0,
     attempt = 0,
@@ -216,7 +216,7 @@ object SparkMetricsAggregatorTest {
     speculative = false,
     accumulatorUpdates = Seq.empty,
     errorMessage = None,
-    new Some(new TaskMetrics(
+    new Some(new TaskMetricsImpl(
       executorDeserializeTime = executorDeserializeTime,
       executorRunTime = executorRunTime,
       resultSize = 0L,
@@ -231,7 +231,7 @@ object SparkMetricsAggregatorTest {
     ))
   )
 
-  def newFakeStageData(id: Int, taskDatas: Seq[TaskData]) = new StageData(
+  def newFakeStageData(id: Int, taskDatas: Seq[TaskDataImpl]) = new StageDataImpl(
     status = StageStatus.COMPLETE,
     stageId = id,
     attemptId = 0,
