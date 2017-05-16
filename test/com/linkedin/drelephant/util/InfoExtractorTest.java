@@ -38,7 +38,6 @@ import com.linkedin.drelephant.spark.fetchers.statusapiv1.JobData;
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.StageData;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.stream.Collectors;
 import models.AppResult;
 
 import org.apache.log4j.Logger;
