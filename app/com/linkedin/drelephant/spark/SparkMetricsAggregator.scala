@@ -23,7 +23,6 @@ import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerived
 import com.linkedin.drelephant.util.MemoryFormatUtils
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.Logger
-import scala.collection.Map
 import scala.util.Try
 
 
@@ -51,11 +50,12 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     executorInstances <- executorInstancesOf(data)
     executorMemoryBytes <- executorMemoryBytesOf(data)
   } {
-    val totalExecutorTimeMillis = totalExecutorTimeMillisOf(data)
-    val totalTaskTimeMillis = totalTaskTimeMillisOf(data)
+    val applicationDurationMillis = applicationDurationMillisOf(data)
+    val totalExecutorTaskTimeMillis = totalExecutorTaskTimeMillisOf(data)
 
-    val resourcesAllocatedForUse = aggregateResourceUsage(executorMemoryBytes, totalExecutorTimeMillis)
-    val resourcesActuallyUsed = aggregateResourceUsage(executorMemoryBytes, totalTaskTimeMillis)
+    val resourcesAllocatedForUse =
+      aggregateresourcesAllocatedForUse(executorInstances, executorMemoryBytes, applicationDurationMillis)
+    val resourcesActuallyUsed = aggregateresourcesActuallyUsed(executorMemoryBytes, totalExecutorTaskTimeMillis)
 
     val resourcesActuallyUsedWithBuffer = resourcesActuallyUsed.doubleValue() * (1.0 + allocatedMemoryWasteBufferPercentage)
     val resourcesWastedMBSeconds =  (resourcesActuallyUsedWithBuffer < resourcesAllocatedForUse.doubleValue()) match {
@@ -72,7 +72,7 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     hadoopAggregatedData.setResourceWasted(resourcesWastedMBSeconds.toLong)
   }
 
-  private def aggregateResourceUsage(executorMemoryBytes: Long, totalExecutorTaskTimeMillis: BigInt): BigInt = {
+  private def aggregateresourcesActuallyUsed(executorMemoryBytes: Long, totalExecutorTaskTimeMillis: BigInt): BigInt = {
     val bytesMillis = BigInt(executorMemoryBytes) * totalExecutorTaskTimeMillis
     (bytesMillis / (BigInt(FileUtils.ONE_MB) * BigInt(Statistics.SECOND_IN_MS)))
   }
@@ -102,24 +102,8 @@ class SparkMetricsAggregator(private val aggregatorConfigurationData: Aggregator
     lastApplicationAttemptInfo.endTime.getTime - lastApplicationAttemptInfo.startTime.getTime
   }
 
-  private def totalExecutorTimeMillisOf(data: SparkApplicationData): BigInt = {
+  private def totalExecutorTaskTimeMillisOf(data: SparkApplicationData): BigInt = {
     data.executorSummaries.map { executorSummary => BigInt(executorSummary.totalDuration) }.sum
-  }
-
-  private def totalTaskTimeMillisOf(data: SparkApplicationData): BigInt = {
-    var totalTaskTime = 0;
-    data.stageDatas.map { stageData => {
-      stageData.tasks match {
-        case None => 0
-        case _ => stageData.tasks.get.values.map( taskData => taskData.taskMetrics match {
-          case None => 0
-          case _ => taskData.taskMetrics.get.executorRunTime +
-                    taskData.taskMetrics.get.executorDeserializeTime +
-                    taskData.taskMetrics.get.resultSerializationTime
-          }).sum
-        }
-      }
-    }.sum
   }
 }
 
