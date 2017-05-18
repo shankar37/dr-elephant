@@ -235,41 +235,35 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     jobData.setFinishTime(jobInfo.getFinishTime());
 
     String state = jobInfo.getJobStatus();
-    if (state.equals("SUCCEEDED")) {
+    jobData.setSucceeded(true);
 
-      jobData.setSucceeded(true);
+    // Fetch job counter
+    MapReduceCounterData jobCounter = getCounterData(jobInfo.getTotalCounters());
 
-      // Fetch job counter
-      MapReduceCounterData jobCounter = getCounterData(jobInfo.getTotalCounters());
-
-      // Fetch task data
-      Map<TaskID, JobHistoryParser.TaskInfo> allTasks = jobInfo.getAllTasks();
-      List<JobHistoryParser.TaskInfo> mapperInfoList = new ArrayList<JobHistoryParser.TaskInfo>();
-      List<JobHistoryParser.TaskInfo> reducerInfoList = new ArrayList<JobHistoryParser.TaskInfo>();
-      for (JobHistoryParser.TaskInfo taskInfo : allTasks.values()) {
-        if (taskInfo.getTaskType() == TaskType.MAP) {
-          mapperInfoList.add(taskInfo);
-        } else {
-          reducerInfoList.add(taskInfo);
-        }
+    // Fetch task data
+    Map<TaskID, JobHistoryParser.TaskInfo> allTasks = jobInfo.getAllTasks();
+    List<JobHistoryParser.TaskInfo> mapperInfoList = new ArrayList<JobHistoryParser.TaskInfo>();
+    List<JobHistoryParser.TaskInfo> reducerInfoList = new ArrayList<JobHistoryParser.TaskInfo>();
+    for (JobHistoryParser.TaskInfo taskInfo : allTasks.values()) {
+      if (taskInfo.getTaskType() == TaskType.MAP) {
+        mapperInfoList.add(taskInfo);
+      } else {
+        reducerInfoList.add(taskInfo);
       }
-      if (jobInfo.getTotalMaps() > MAX_SAMPLE_SIZE) {
-        logger.debug(jobId + " total mappers: " + mapperInfoList.size());
-      }
-      if (jobInfo.getTotalReduces() > MAX_SAMPLE_SIZE) {
-        logger.debug(jobId + " total reducers: " + reducerInfoList.size());
-      }
-      MapReduceTaskData[] mapperList = getTaskData(jobId, mapperInfoList);
-      MapReduceTaskData[] reducerList = getTaskData(jobId, reducerInfoList);
+    }
+    if (jobInfo.getTotalMaps() > MAX_SAMPLE_SIZE) {
+      logger.debug(jobId + " total mappers: " + mapperInfoList.size());
+    }
+    if (jobInfo.getTotalReduces() > MAX_SAMPLE_SIZE) {
+      logger.debug(jobId + " total reducers: " + reducerInfoList.size());
+    }
+    MapReduceTaskData[] mapperList = getTaskData(jobId, mapperInfoList);
+    MapReduceTaskData[] reducerList = getTaskData(jobId, reducerInfoList);
 
-      jobData.setCounters(jobCounter).setMapperData(mapperList).setReducerData(reducerList);
-    } else if (state.equals("FAILED")) {
-
+    jobData.setCounters(jobCounter).setMapperData(mapperList).setReducerData(reducerList);
+    if (state.equals("FAILED")) {
       jobData.setSucceeded(false);
       jobData.setDiagnosticInfo(jobInfo.getErrorInfo());
-    } else {
-      // Should not reach here
-      throw new RuntimeException("Job state not supported. Should be either SUCCEEDED or FAILED");
     }
 
     return jobData;
@@ -309,14 +303,16 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     List<MapReduceTaskData> taskList = new ArrayList<MapReduceTaskData>();
     for (int i = 0; i < sampleSize; i++) {
       JobHistoryParser.TaskInfo tInfo = infoList.get(i);
-      if (!"SUCCEEDED".equals(tInfo.getTaskStatus())) {
-        logger.info(String.format("Skipped a failed task of %s: %s", jobId, tInfo.getTaskId().toString()));
-        continue;
-      }
 
       String taskId = tInfo.getTaskId().toString();
-      TaskAttemptID attemptId = tInfo.getSuccessfulAttemptId();
-      MapReduceTaskData taskData = new MapReduceTaskData(taskId, attemptId.toString());
+      TaskAttemptID attemptId = null;
+      if(tInfo.getTaskStatus().equals("SUCCEEDED")) {
+        attemptId = tInfo.getSuccessfulAttemptId();
+      } else {
+        attemptId = tInfo.getFailedDueToAttemptId();
+      }
+
+      MapReduceTaskData taskData = new MapReduceTaskData(taskId, attemptId.toString(), tInfo.getTaskStatus());
 
       MapReduceCounterData taskCounterData = getCounterData(tInfo.getCounters());
       long[] taskExecTime = getTaskExecTime(tInfo.getAllTaskAttempts().get(attemptId));
