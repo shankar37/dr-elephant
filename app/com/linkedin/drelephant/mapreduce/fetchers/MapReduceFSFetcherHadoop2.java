@@ -235,7 +235,16 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     jobData.setFinishTime(jobInfo.getFinishTime());
 
     String state = jobInfo.getJobStatus();
-    jobData.setSucceeded(true);
+    if( state.equals("SUCCEEDED")) {
+      jobData.setSucceeded(true);
+    }
+    else if (state.equals("FAILED")) {
+      jobData.setSucceeded(false);
+      jobData.setDiagnosticInfo(jobInfo.getErrorInfo());
+    } else {
+      throw new RuntimeException("job neither succeeded or failed. can not process it ");
+    }
+
 
     // Fetch job counter
     MapReduceCounterData jobCounter = getCounterData(jobInfo.getTotalCounters());
@@ -261,20 +270,18 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     MapReduceTaskData[] reducerList = getTaskData(jobId, reducerInfoList);
 
     jobData.setCounters(jobCounter).setMapperData(mapperList).setReducerData(reducerList);
-    if (state.equals("FAILED")) {
-      jobData.setSucceeded(false);
-      jobData.setDiagnosticInfo(jobInfo.getErrorInfo());
-    }
 
     return jobData;
   }
 
   private MapReduceCounterData getCounterData(Counters counters) {
     MapReduceCounterData holder = new MapReduceCounterData();
-    for (CounterGroup group : counters) {
-      String groupName = group.getName();
-      for (Counter counter : group) {
-        holder.set(groupName, counter.getName(), counter.getValue());
+    if(counters != null ) {
+      for (CounterGroup group : counters) {
+        String groupName = group.getName();
+        for (Counter counter : group) {
+          holder.set(groupName, counter.getName(), counter.getValue());
+        }
       }
     }
     return holder;
@@ -312,10 +319,14 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
         attemptId = tInfo.getFailedDueToAttemptId();
       }
 
-      MapReduceTaskData taskData = new MapReduceTaskData(taskId, attemptId.toString(), tInfo.getTaskStatus());
+      MapReduceTaskData taskData = new MapReduceTaskData(taskId, attemptId == null ? "" : attemptId.toString() , tInfo.getTaskStatus());
 
       MapReduceCounterData taskCounterData = getCounterData(tInfo.getCounters());
-      long[] taskExecTime = getTaskExecTime(tInfo.getAllTaskAttempts().get(attemptId));
+
+      long[] taskExecTime = null;
+      if( attemptId != null) {
+        taskExecTime = getTaskExecTime(tInfo.getAllTaskAttempts().get(attemptId));
+      }
 
       taskData.setTimeAndCounter(taskExecTime, taskCounterData);
       taskList.add(taskData);
