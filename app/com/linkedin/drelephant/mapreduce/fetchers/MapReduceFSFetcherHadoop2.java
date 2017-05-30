@@ -235,7 +235,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
     jobData.setFinishTime(jobInfo.getFinishTime());
 
     String state = jobInfo.getJobStatus();
-    if( state.equals("SUCCEEDED")) {
+    if (state.equals("SUCCEEDED")) {
       jobData.setSucceeded(true);
     }
     else if (state.equals("FAILED")) {
@@ -276,7 +276,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
 
   private MapReduceCounterData getCounterData(Counters counters) {
     MapReduceCounterData holder = new MapReduceCounterData();
-    if(counters != null ) {
+    if (counters != null) {
       for (CounterGroup group : counters) {
         String groupName = group.getName();
         for (Counter counter : group) {
@@ -324,7 +324,7 @@ public class MapReduceFSFetcherHadoop2 extends MapReduceFetcher {
       MapReduceCounterData taskCounterData = getCounterData(tInfo.getCounters());
 
       long[] taskExecTime = null;
-      if( attemptId != null) {
+      if (attemptId != null) {
         taskExecTime = getTaskExecTime(tInfo.getAllTaskAttempts().get(attemptId));
       }
 

@@ -47,7 +47,7 @@ public class MapReduceTaskData {
   }
 
   public void setTimeAndCounter(long[] time, MapReduceCounterData counterHolder) {
-    if( time != null) {
+    if (time != null) {
       this._totalTimeMs = time[0];
       this._shuffleTimeMs = time[1];
       this._sortTimeMs = time[2];
@@ -55,7 +55,7 @@ public class MapReduceTaskData {
       this._finishTimeMs = time[4];
       this._isTimeDataPresent = true;
     }
-    if(counterHolder != null ) {
+    if (counterHolder != null) {
       this._counterHolder = counterHolder;
       this._isCounterDataPresent = true;
     }

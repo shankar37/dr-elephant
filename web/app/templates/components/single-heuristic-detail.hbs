@@ -30,7 +30,7 @@
                             </tr></thead>
                             <tbody>
                             {{#each yarnappheuristicresult.details as |yarnappheuristicresultdetail|}}
-                                {{#if (not-empty yarnappheuristicresultdetail.details) }}
+                                {{#if (eq "Error" yarnappheuristicresultdetail.name) }}
                                   <tr>
                                       <td>{{yarnappheuristicresultdetail.value}}</td>
                                   </tr>
