@@ -17,7 +17,7 @@
 package com.linkedin.drelephant.spark.heuristics
 
 import com.linkedin.drelephant.spark.data.SparkRestDerivedData
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl}
 import scala.collection.JavaConverters
 
 import com.linkedin.drelephant.analysis.{ApplicationType, Severity}
@@ -285,11 +285,11 @@ object ConfigurationHeuristicTest {
     val appId = "application_1"
     val startDate = new Date()
     val endDate = new Date(startDate.getTime() + 10000)
-    val applicationAttempt = new ApplicationAttemptInfo(Option("attempt1"),startDate, endDate, "sparkUser")
+    val applicationAttempt = new ApplicationAttemptInfoImpl(Option("attempt1"),startDate, endDate, "sparkUser")
     val applicationAttempts = Seq(applicationAttempt)
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(appId, name = "app", applicationAttempts),
+      new ApplicationInfoImpl(appId, name = "app", applicationAttempts),
       jobDatas = Seq.empty,
       stageDatas = Seq.empty,
       executorSummaries = Seq.empty

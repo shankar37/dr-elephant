@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.fasterxml.jackson.module.scala.experimental.ScalaObjectMapper
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfo, ExecutorSummary, JobData, StageData}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationInfoImpl, ExecutorSummaryImpl, JobDataImpl, StageDataImpl}
 import com.linkedin.drelephant.util.SparkUtils
 import javax.ws.rs.client.{Client, ClientBuilder, WebTarget}
 import javax.ws.rs.core.MediaType
@@ -125,9 +126,9 @@ class SparkRestClient(sparkConf: SparkConf) {
     (applicationInfo, attemptTarget)
   }
 
-  private def getApplicationInfo(appTarget: WebTarget): ApplicationInfo = {
+  private def getApplicationInfo(appTarget: WebTarget): ApplicationInfoImpl = {
     try {
-      get(appTarget, SparkRestObjectMapper.readValue[ApplicationInfo])
+      get(appTarget, SparkRestObjectMapper.readValue[ApplicationInfoImpl])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading applicationInfo ${appTarget.getUri}", e)
@@ -177,10 +178,10 @@ class SparkRestClient(sparkConf: SparkConf) {
     }
   }
 
-  private def getJobDatas(attemptTarget: WebTarget): Seq[JobData] = {
+  private def getJobDatas(attemptTarget: WebTarget): Seq[JobDataImpl] = {
     val target = attemptTarget.path("jobs")
     try {
-      get(target, SparkRestObjectMapper.readValue[Seq[JobData]])
+      get(target, SparkRestObjectMapper.readValue[Seq[JobDataImpl]])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading jobData ${target.getUri}", e)
@@ -189,10 +190,10 @@ class SparkRestClient(sparkConf: SparkConf) {
     }
   }
 
-  private def getStageDatas(attemptTarget: WebTarget): Seq[StageData] = {
+  private def getStageDatas(attemptTarget: WebTarget): Seq[StageDataImpl] = {
     val target = attemptTarget.path("stages")
     try {
-      get(target, SparkRestObjectMapper.readValue[Seq[StageData]])
+      get(target, SparkRestObjectMapper.readValue[Seq[StageDataImpl]])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading stageData ${target.getUri}", e)
@@ -201,10 +202,10 @@ class SparkRestClient(sparkConf: SparkConf) {
     }
   }
 
-  private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummary] = {
+  private def getExecutorSummaries(attemptTarget: WebTarget): Seq[ExecutorSummaryImpl] = {
     val target = attemptTarget.path("executors")
     try {
-      get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummary]])
+      get(target, SparkRestObjectMapper.readValue[Seq[ExecutorSummaryImpl]])
     } catch {
       case NonFatal(e) => {
         logger.error(s"error reading executorSummary ${target.getUri}", e)

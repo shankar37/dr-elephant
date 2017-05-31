@@ -25,7 +25,7 @@ import com.linkedin.drelephant.analysis.{AnalyticJob, ApplicationType}
 import com.linkedin.drelephant.configurations.fetcher.FetcherConfigurationData
 import com.linkedin.drelephant.spark.data.{SparkApplicationData, SparkLogDerivedData, SparkRestDerivedData}
 import com.linkedin.drelephant.spark.fetchers.SparkFetcher.EventLogSource
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl}
 import com.linkedin.drelephant.util.{SparkUtils, HadoopUtils}
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
@@ -49,7 +49,7 @@ class SparkFetcherTest extends FunSpec with Matchers with MockitoSugar {
     val duration = 8000000L
 
     val restDerivedData = SparkRestDerivedData(
-      new ApplicationInfo(
+      new ApplicationInfoImpl(
         appId,
         "app",
         Seq(
@@ -284,7 +284,7 @@ object SparkFetcherTest {
     attemptId: Option[String],
     startTime: Date,
     endTime: Date
-  ): ApplicationAttemptInfo = new ApplicationAttemptInfo(
+  ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
     attemptId,
     startTime,
     endTime,

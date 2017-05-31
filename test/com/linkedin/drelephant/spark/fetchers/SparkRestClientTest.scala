@@ -28,7 +28,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfo, ApplicationInfo, ExecutorSummary, JobData, StageData}
+import com.linkedin.drelephant.spark.fetchers.statusapiv1.{ApplicationAttemptInfoImpl, ApplicationInfoImpl, ExecutorSummaryImpl, JobDataImpl, StageDataImpl}
 import javax.ws.rs.{GET, Path, PathParam, Produces}
 import javax.ws.rs.core.{Application, MediaType, Response}
 import javax.ws.rs.ext.ContextResolver
@@ -250,7 +250,7 @@ class SparkRestClientTest extends AsyncFunSpec with Matchers {
         "unrecognized" : "bar"
       }"""
 
-      val applicationAttemptInfo = objectMapper.readValue[ApplicationAttemptInfo](json)
+      val applicationAttemptInfo = objectMapper.readValue[ApplicationAttemptInfoImpl](json)
       applicationAttemptInfo.sparkUser should be("foo")
     }
   }
@@ -315,11 +315,11 @@ object SparkRestClientTest {
     @Produces(Array(MediaType.APPLICATION_JSON))
     class ApplicationResource {
       @GET
-      def getApplication(@PathParam("appId") appId: String): ApplicationInfo = {
+      def getApplication(@PathParam("appId") appId: String): ApplicationInfoImpl = {
         val t2 = System.currentTimeMillis
         val t1 = t2 - 1
         val duration = 8000000L
-        new ApplicationInfo(
+        new ApplicationInfoImpl(
           APP_ID,
           APP_NAME,
           Seq(
@@ -333,21 +333,21 @@ object SparkRestClientTest {
     @Produces(Array(MediaType.APPLICATION_JSON))
     class JobsResource {
       @GET
-      def getJobs(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[JobData] =
+      def getJobs(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[JobDataImpl] =
         if (attemptId == "2") Seq.empty else throw new Exception()
     }
 
     @Produces(Array(MediaType.APPLICATION_JSON))
     class StagesResource {
       @GET
-      def getStages(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[StageData] =
+      def getStages(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[StageDataImpl] =
         if (attemptId == "2") Seq.empty else throw new Exception()
     }
 
     @Produces(Array(MediaType.APPLICATION_JSON))
     class ExecutorsResource {
       @GET
-      def getExecutors(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[ExecutorSummary] =
+      def getExecutors(@PathParam("appId") appId: String, @PathParam("attemptId") attemptId: String): Seq[ExecutorSummaryImpl] =
         if (attemptId == "2") Seq.empty else throw new Exception()
     }
 
@@ -387,11 +387,11 @@ object SparkRestClientTest {
     @Produces(Array(MediaType.APPLICATION_JSON))
     class ApplicationResource {
       @GET
-      def getApplication(@PathParam("appId") appId: String): ApplicationInfo = {
+      def getApplication(@PathParam("appId") appId: String): ApplicationInfoImpl = {
         val t2 = System.currentTimeMillis
         val t1 = t2 - 1
         val duration = 8000000L
-        new ApplicationInfo(
+        new ApplicationInfoImpl(
           APP_ID,
           APP_NAME,
           Seq(
@@ -405,21 +405,21 @@ object SparkRestClientTest {
     @Produces(Array(MediaType.APPLICATION_JSON))
     class JobsResource {
       @GET
-      def getJobs(@PathParam("appId") appId: String): Seq[JobData] =
+      def getJobs(@PathParam("appId") appId: String): Seq[JobDataImpl] =
         Seq.empty
     }
 
     @Produces(Array(MediaType.APPLICATION_JSON))
     class StagesResource {
       @GET
-      def getStages(@PathParam("appId") appId: String): Seq[StageData] =
+      def getStages(@PathParam("appId") appId: String): Seq[StageDataImpl] =
         Seq.empty
     }
 
     @Produces(Array(MediaType.APPLICATION_JSON))
     class ExecutorsResource {
       @GET
-      def getExecutors(@PathParam("appId") appId: String): Seq[ExecutorSummary] =
+      def getExecutors(@PathParam("appId") appId: String): Seq[ExecutorSummaryImpl] =
         Seq.empty
     }
 
@@ -436,7 +436,7 @@ object SparkRestClientTest {
     attemptId: Option[String],
     startTime: Date,
     endTime: Date
-  ): ApplicationAttemptInfo = new ApplicationAttemptInfo(
+  ): ApplicationAttemptInfoImpl = new ApplicationAttemptInfoImpl(
     attemptId,
     startTime,
     endTime,
