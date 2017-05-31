@@ -54,10 +54,7 @@ class SparkApplicationDataTest extends FunSpec with Matchers {
       "spark.shuffle.memoryFraction" -> "0.5"
     )
 
-    val logDerivedData = SparkLogDerivedData(
-      SparkListenerEnvironmentUpdate(Map("Spark Properties" -> configurationProperties.toSeq))
-    )
-
+    val logDerivedData = SparkLogDerivedData(configurationProperties)
     describe(".getConf") {
       it("returns the Spark properties") {
         val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))

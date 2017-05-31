@@ -39,7 +39,7 @@ package com.linkedin.drelephant.spark.fetchers.statusapiv1
 
 import java.util.Date
 
-import scala.collection.Map
+import scala.collection.{mutable, Map}
 
 import org.apache.spark.JobExecutionStatus
 import org.apache.spark.status.api.v1.StageStatus
@@ -254,17 +254,17 @@ trait AccumulableInfo{
   def update: Option[String]
   def value: String}
 
-class ApplicationInfoImpl(
-  var id: String,
-  var name: String,
-  var attempts: Seq[ApplicationAttemptInfoImpl]) extends ApplicationInfo
+class ApplicationInfoImpl(var id: String, var name: String, var attempts: Seq[ApplicationAttemptInfoImpl])  extends ApplicationInfo {
+  def this() = this("", "", null)
+}
 
-class ApplicationAttemptInfoImpl(
-  var attemptId: Option[String],
-  var startTime: Date,
-  var endTime: Date,
-  var sparkUser: String,
-  var completed: Boolean = false) extends ApplicationAttemptInfo
+class ApplicationAttemptInfoImpl(var attemptId: Option[String],
+                                 var startTime: Date,
+                                 var endTime: Date,
+                                 var sparkUser: String,
+                                 var completed: Boolean = false) extends ApplicationAttemptInfo {
+  def this() = this(None, new Date(0), new Date(0), "Unknown", false)
+}
 
 class ExecutorStageSummaryImpl(
   var taskTime : Long,
@@ -292,7 +292,9 @@ class ExecutorSummaryImpl(
   var totalShuffleRead: Long,
   var totalShuffleWrite: Long,
   var maxMemory: Long,
-  var executorLogs: Map[String, String]) extends ExecutorSummary
+  var executorLogs: Map[String, String]) extends ExecutorSummary {
+  def this(id: String) = this(id, "Unknown", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Map.empty)
+}
 
 class JobDataImpl(
   var jobId: Int,

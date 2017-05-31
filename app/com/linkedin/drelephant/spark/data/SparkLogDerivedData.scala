@@ -18,7 +18,4 @@ package com.linkedin.drelephant.spark.data
 
 import org.apache.spark.scheduler.SparkListenerEnvironmentUpdate
 
-
-case class SparkLogDerivedData(environmentUpdate: SparkListenerEnvironmentUpdate) {
-  def appConfigurationProperties: Map[String, String] = environmentUpdate.environmentDetails("Spark Properties").toMap
-}
+case class SparkLogDerivedData(appConfigurationProperties: Map[String, String])

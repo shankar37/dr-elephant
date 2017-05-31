@@ -71,69 +71,12 @@ class SparkLogClient(hadoopConfiguration: Configuration, sparkConf: SparkConf, e
 }
 
 object SparkLogClient {
-  import JsonAST._
-
-  private implicit val formats: DefaultFormats = DefaultFormats
-
   def findDerivedData(in: InputStream, eventsLimit: Option[Int] = None): SparkLogDerivedData = {
-    val events = eventsLimit.map { getEvents(in).take(_) }.getOrElse { getEvents(in) }
-
-    var environmentUpdate: Option[SparkListenerEnvironmentUpdate] = None
-    while (events.hasNext && environmentUpdate.isEmpty) {
-      val event = events.next
-      event match {
-        case Some(eu: SparkListenerEnvironmentUpdate) => environmentUpdate = Some(eu)
-        case _ => {} // Do nothing.
-      }
-    }
-
-    environmentUpdate
+    val parser = new SparkEventLogParser()
+    parser.load(in)
+    println("EnvDetails: " + parser.getEnvironmentDetails )
+    parser.getEnvironmentDetails
       .map(SparkLogDerivedData(_))
       .getOrElse { throw new IllegalArgumentException("Spark event log doesn't have Spark properties") }
-  }
-
-  private def getEvents(in: InputStream): Iterator[Option[SparkListenerEvent]] = getLines(in).map(lineToEvent)
-
-  private def getLines(in: InputStream): Iterator[String] = Source.fromInputStream(in).getLines
-
-  private def lineToEvent(line: String): Option[SparkListenerEvent] = sparkEventFromJson(JsonMethods.parse(line))
-
-  // Below this line are modified utility methods from:
-  //
-  // https://github.com/apache/spark/blob/v1.4.1/core/src/main/scala/org/apache/spark/io/CompressionCodec.scala
-  // https://github.com/apache/spark/blob/v1.4.1/core/src/main/scala/org/apache/spark/util/JsonProtocol.scala
-  // https://github.com/apache/spark/blob/v1.4.1/core/src/main/scala/org/apache/spark/util/Utils.scala
-
-  private def sparkEventFromJson(json: JValue): Option[SparkListenerEvent] = {
-    val environmentUpdate = getFormattedClassName(SparkListenerEnvironmentUpdate)
-
-    (json \ "Event").extract[String] match {
-      case `environmentUpdate` => Some(environmentUpdateFromJson(json))
-      case _ => None
-    }
-  }
-
-  private def getFormattedClassName(obj: AnyRef): String = obj.getClass.getSimpleName.replace("$", "")
-
-  private def environmentUpdateFromJson(json: JValue): SparkListenerEnvironmentUpdate = {
-    val environmentDetails = Map[String, Seq[(String, String)]](
-      "JVM Information" -> mapFromJson(json \ "JVM Information").toSeq,
-      "Spark Properties" -> mapFromJson(json \ "Spark Properties").toSeq,
-      "System Properties" -> mapFromJson(json \ "System Properties").toSeq,
-      "Classpath Entries" -> mapFromJson(json \ "Classpath Entries").toSeq)
-    SparkListenerEnvironmentUpdate(environmentDetails)
-  }
-
-  private def mapFromJson(json: JValue): Map[String, String] = {
-    val jsonFields = json.asInstanceOf[JObject].obj
-    jsonFields.map { case JField(k, JString(v)) => (k, v) }.toMap
-  }
-
-  /** Return an option that translates JNothing to None */
-  private def jsonOption(json: JValue): Option[JValue] = {
-    json match {
-      case JNothing => None
-      case value: JValue => Some(value)
-    }
   }
 }

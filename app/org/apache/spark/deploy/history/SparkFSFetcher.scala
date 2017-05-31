@@ -40,7 +40,7 @@ import org.apache.spark.ui.storage.StorageListener
 /**
  * A wrapper that replays Spark event history from files and then fill proper data objects.
  */
-class SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends ElephantFetcher[SparkApplicationData] {
+class   SparkFSFetcher(fetcherConfData: FetcherConfigurationData) extends ElephantFetcher[SparkApplicationData] {
   import SparkFSFetcher._
 
   val eventLogSizeLimitMb =

@@ -61,7 +61,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
 
     describe("when it has log-derived data") {
       val logDerivedData = {
-        val environmentUpdate = newFakeSparkListenerEnvironmentUpdate(
+        val environmentDetails =
           Map(
             "spark.serializer" -> "org.apache.spark.serializer.KryoSerializer",
             "spark.storage.memoryFraction" -> "0.3",
@@ -70,8 +70,7 @@ class SparkMetricsAggregatorTest extends FunSpec with Matchers {
             "spark.executor.memory" -> "4g",
             "spark.shuffle.memoryFraction" -> "0.5"
           )
-        )
-        SparkLogDerivedData(environmentUpdate)
+        SparkLogDerivedData(environmentDetails)
       }
 
       val data = SparkApplicationData(appId, restDerivedData, Some(logDerivedData))

@@ -278,9 +278,7 @@ object ConfigurationHeuristicTest {
     new HeuristicConfigurationData("heuristic", "class", "view", new ApplicationType("type"), params.asJava)
 
   def newFakeSparkApplicationData(appConfigurationProperties: Map[String, String]): SparkApplicationData = {
-    val logDerivedData = SparkLogDerivedData(
-      SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
-    )
+    val logDerivedData = SparkLogDerivedData(appConfigurationProperties)
 
     val appId = "application_1"
     val startDate = new Date()

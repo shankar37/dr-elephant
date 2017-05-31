@@ -182,9 +182,7 @@ object StagesHeuristicTest {
       executorSummaries = Seq.empty
     )
 
-    val logDerivedData = SparkLogDerivedData(
-      SparkListenerEnvironmentUpdate(Map("Spark Properties" -> appConfigurationProperties.toSeq))
-    )
+    val logDerivedData = SparkLogDerivedData(appConfigurationProperties)
 
     SparkApplicationData(appId, restDerivedData, Some(logDerivedData))
   }

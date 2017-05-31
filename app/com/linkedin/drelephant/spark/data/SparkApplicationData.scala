@@ -57,10 +57,10 @@ object SparkApplicationData {
     restDerivedData: SparkRestDerivedData,
     logDerivedData: Option[SparkLogDerivedData]
   ): SparkApplicationData = {
-    val appConfigurationProperties: Map[String, String] =
-      logDerivedData
-        .flatMap { _.environmentUpdate.environmentDetails.get("Spark Properties").map(_.toMap) }
-        .getOrElse(Map.empty)
+    val appConfigurationProperties: Map[String, String] = logDerivedData match {
+      case None => Map.empty
+      case _ => logDerivedData.get.appConfigurationProperties
+    }
     val applicationInfo = restDerivedData.applicationInfo
     val jobDatas = restDerivedData.jobDatas
     val stageDatas = restDerivedData.stageDatas
